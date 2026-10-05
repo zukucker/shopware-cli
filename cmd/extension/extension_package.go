@@ -22,6 +22,7 @@ import (
 var (
 	disableGit           = false
 	extensionReleaseMode = false
+	packageWithoutIcon   = false
 )
 
 var extensionPackageCmd = &cobra.Command{
@@ -170,7 +171,11 @@ var extensionPackageCmd = &cobra.Command{
 			}
 		}
 
-		if err := extension.ResizeExtensionIcon(cmd.Context(), tempExt); err != nil {
+		if packageWithoutIcon {
+			if err := extension.RemoveExtensionIcon(cmd.Context(), tempExt); err != nil {
+				return fmt.Errorf("cannot remove extension icon: %w", err)
+			}
+		} else if err := extension.ResizeExtensionIcon(cmd.Context(), tempExt); err != nil {
 			return fmt.Errorf("resize extension icon: %w", err)
 		}
 
@@ -231,6 +236,7 @@ func init() {
 	extensionRootCmd.AddCommand(extensionPackageCmd)
 	extensionPackageCmd.Flags().BoolVar(&disableGit, "disable-git", false, "Package the working copy instead of a clean Git checkout (symlinks are skipped)")
 	extensionPackageCmd.Flags().BoolVar(&extensionReleaseMode, "release", false, "Prepare a release build: generate the changelog if enabled and, for apps, remove the secret from manifest.xml")
+	extensionPackageCmd.Flags().BoolVar(&packageWithoutIcon, "no-icon", false, "Package without an icon: remove the icon file and clear the reference to it in manifest.xml or composer.json")
 	extensionPackageCmd.Flags().String("overwrite-app-backend-url", "", "Replace the scheme and host of the app backend URLs in manifest.xml (apps only)")
 	extensionPackageCmd.Flags().String("overwrite-app-backend-secret", "", "Set the app secret in manifest.xml (apps only)")
 	extensionPackageCmd.Flags().String("overwrite-version", "", "Set the extension version in the package")
